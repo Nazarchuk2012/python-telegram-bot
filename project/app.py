@@ -1,52 +1,74 @@
-from telebot.apihelper import delete_chat_sticker_set
-
-import config
+import config as c
 import telebot
 import threading
 import time
 import sqlite3
 
-bot = telebot.TeleBot(config.BOT_TOKEN)
+bot = telebot.TeleBot(c.BOT_TOKEN)
 
 USER_CHAT_ID = '6018884509'
 
-# === SQLITE3 =================================================================
-db = sqlite3.connect('notebook.db')
-cursor = db.cursor()
+# === SQLITE3 =======================================ip==========================
+#db = sqlite3.connect(c.DB_NAME)
+#cursor = db.cursor()
 
-
+#cursor.execute('''CREATE TABLE notes (
+#    id INTEGER PRIMARY KEY AUTOINCREMENT,
+#    user_id INTEGER NOT NULL,
+#    title TEXT NOT NULL,
+#    content TEXT DEFAULT '',
+#    notification DATETIME DEFAULT CURRENT_TIMESTAMP,
+#    is_ send INTEGER DEFAULT 0,
+#   deleted INTEGER DEFAULT 1
+#    )''')
+#db.commit()
 #
-cursor.execute('''CREATE TABLE user (
-    id INTEGER PRIMARY KEY,
-    chat_id INTEGER NOT NULL,
-    name TEXT DEFAULT 'Unknow',
-    email TEXT DEFAULT '',
-    role INTEGER DEFAULT 0,
-    deleted INTEGER DEFAULT 1
-    )''')
-db.commit()
+#cursor.execute('''CREATE TABLE user(
+#    id INTEGER PRIMARY KEY AUTOINCREMENT,
+#    chat_id INTEGER NOT NULL UNIQUE,
+#    name TEXT DEFAULT 'Невідомий',
+#    deleted INTEGER DEFAULT 1
+#    )''')
+#db.commit()
 
 # === FUNCTIONS =============================
 def send_stupid_message():
     while True:
+
+
         bot.send_message(USER_CHAT_ID, 'Дурненьке повідомлення')
-        time.sleep(234235345)
+        time.sleep(10)
+
+
+def bot_start(message):
+    db = sqlite3.connect(c.DB_NAME)
+    cur = db.cursor()
+
+    cur.execute(f"SELECT chat_id FROM user WHERE chat_id='{message.chat.id}'")
+    row = cur.fetchone()
+
+    if not row:
+        cur.execute(f"INSERT INTO user (chat_id, name) VALUES ('{message.chat.id}', '')")
+        db.commit()
+        bot.send_message(message.chat.id, 'Вас додано до цього бота')
+    else:
+        bot.send_message(message.chat.id, 'Ви вже підписані на цього бота')
 
 # === HANDLER ===============================
 
-start - підписка
-add - додати
-edit - редагувати
-del - видалити
-all - показати всі
-day - показати за день
-end - відписатися
+#start - підписка
+#add - додати
+#edit - редагувати
+#del - видалити
+#all - показати всі
+#day - показати за день
+#end - відписатися
 
 # Обробник текстових повідомлення
 @bot.message_handler(commands=['start', 'add', 'edit', 'del', 'all', 'day', 'end'])
-def handler_text_message(message):
+def handler_commands(message):
     if '/start' == message.text:
-        pass
+        bot_start(message)
     elif '/add' == message.text:
         pass
     elif '/edit' == message.text:
@@ -68,11 +90,11 @@ def handler_text_message(message):
     bot.send_message(message.chat.id, 'Бот Працює! ' + str(message.chat.id))
 
 
-if __name__ == "__main__":
+#if __name__ == "__main__":
     #thread = threading.Thread(target=send_stupid_message)
     #thread.start()
     # Запуск бота
-    bot.infinity_polling()
+#    bot.infinity_polling()
 
 
 
